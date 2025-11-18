@@ -19,47 +19,47 @@ class Constants {
   final firestore = FirebaseFirestore.instance;
 }
 
-final GoRouter _router = GoRouter(
-  initialLocation: '/', // Where the app starts
-  routes: <RouteBase>[
-    // The Home Route
-    GoRoute(
-      path: '/',
-      builder: (BuildContext context, GoRouterState state) {
-        return const HomePage();
-      },
-      // Sub-routes (Nested routes).
-      // These are useful if you want breadcrumbs like /home/details
-      routes: <RouteBase>[
-        // You can add sub-routes here
-      ],
-    ),
-    // The Login Route
-    GoRoute(
-      path: '/login',
-      builder: (BuildContext context, GoRouterState state) {
-        return const LoginScreen();
-      },
-    ),
-    // The Register Route
-    GoRoute(
-      path: '/register',
-      builder: (BuildContext context, GoRouterState state) {
-        return const RegisterScreen();
-      },
-    ),
-  ],
-  // ADVANCED: Global Redirection (Guards)
-  // This runs on every navigation event.
-  redirect: (BuildContext context, GoRouterState state) {
-    // Example: If user is not logged in and tries to go to profile, send to login.
-    // bool isLoggedIn = // check your auth provider
-    // if (!isLoggedIn && state.uri.toString() != '/login') {
-    //   return '/login';
-    // }
-    return null; // Return null to allow navigation to proceed
-  },
-);
+// final GoRouter _router = GoRouter(
+//   initialLocation: '/', // Where the app starts
+//   routes: <RouteBase>[
+//     // The Home Route
+//     GoRoute(
+//       path: '/',
+//       builder: (BuildContext context, GoRouterState state) {
+//         return const HomePage();
+//       },
+//       // Sub-routes (Nested routes).
+//       // These are useful if you want breadcrumbs like /home/details
+//       routes: <RouteBase>[
+//         // You can add sub-routes here
+//       ],
+//     ),
+//     // The Login Route
+//     GoRoute(
+//       path: '/login',
+//       builder: (BuildContext context, GoRouterState state) {
+//         return const LoginScreen();
+//       },
+//     ),
+//     // The Register Route
+//     GoRoute(
+//       path: '/register',
+//       builder: (BuildContext context, GoRouterState state) {
+//         return const RegisterScreen();
+//       },
+//     ),
+//   ],
+//   // ADVANCED: Global Redirection (Guards)
+//   // This runs on every navigation event.
+//   redirect: (BuildContext context, GoRouterState state) {
+//     // Example: If user is not logged in and tries to go to profile, send to login.
+//     // bool isLoggedIn = // check your auth provider
+//     // if (!isLoggedIn && state.uri.toString() != '/login') {
+//     //   return '/login';
+//     // }
+//     return null; // Return null to allow navigation to proceed
+//   },
+// );
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -273,7 +273,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
-  bool _rememberMe = false;
+  // bool _rememberMe = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
