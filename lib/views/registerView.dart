@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -5,44 +6,70 @@ import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:my_learning_app/main.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  // bool _rememberMe = false;
+
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _rememberMe = false;
-  bool _isPasswordVisible = false;
-  bool _isLoading = false;
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
-  Future<void> _handleLogin() async {
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleEmailSignup() async {
     try {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Password does not match")),
+        );
+        return;
+      }
       setState(() {
         _isLoading = true;
       });
-      final user = await Constants().auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-
-      print(user);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+      final UserCredential userCredential = await Constants().auth
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+      final User? user = userCredential.user;
+      if (user != null) {
+        await _saveUserToFirestore(user, _nameController.text);
+        // Navigate to home after successful signup
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, "/");
+        }
       }
-      print(e);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        print('The account already exists for that email.');
+      }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.code)));
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e.message')));
       print(e);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -68,12 +95,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential);
-      print(FirebaseAuth.instance.currentUser?.emailVerified);
+      final User? user = userCredential.user;
 
+      if (user != null) {
+        final bool isNewUser =
+            userCredential.additionalUserInfo?.isNewUser ?? false;
+        if (isNewUser) {
+          await _saveUserToFirestore(user, user.displayName ?? "Google User");
+        }
+      }
       return userCredential.user;
     } catch (e, st) {
       print('Google sign-in error: $e.message\n$st');
       return null;
+    }
+  }
+
+  Future<void> _saveUserToFirestore(User user, String name) async {
+    try {
+      await Constants().firestore.collection("users").doc(user.uid).set({
+        'uid': user.uid,
+        'name': name,
+        'email': user.email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print("Error on storing user data");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$e.message')));
     }
   }
 
@@ -82,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final Size screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: const Color(0xFFFFFFFF), // Off-white background
       body: Stack(
         children: [
           Center(
@@ -100,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           Text(
-                            "Login here",
+                            "Create Account",
                             style: TextStyle(
                               color: Colors.amber[900],
                               fontSize: 30,
@@ -110,10 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            "Welcome back you've been missed!",
+                            "Create an account to add your all notes at one place.",
                             style: TextStyle(
                               color: Colors.black,
-                              fontSize: 18,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,
@@ -123,9 +173,35 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 40),
                     TextFormField(
+                      controller: _nameController,
+                      style: const TextStyle(color: Colors.black87),
+                      keyboardType: TextInputType.name,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color.fromARGB(141, 255, 225, 219),
+                        hintText: "Your name",
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            width: 2,
+                            color: const Color.fromARGB(255, 255, 168, 7),
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _emailController,
                       style: const TextStyle(color: Colors.black87),
                       keyboardType: TextInputType.emailAddress,
-                      controller: _emailController,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: const Color.fromARGB(141, 255, 225, 219),
@@ -142,11 +218,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 20,
+                          vertical: 12,
+                          horizontal: 16,
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 20),
 
                     TextFormField(
@@ -154,8 +231,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: !_isPasswordVisible,
                       style: const TextStyle(color: Colors.black87),
                       decoration: InputDecoration(
-                        hintText: "Password",
                         filled: true,
+                        hintText: "Password",
                         fillColor: Color.fromARGB(141, 255, 225, 219),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -169,8 +246,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 20,
+                          vertical: 12,
+                          horizontal: 16,
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -188,51 +265,36 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-
-                    // Remember Me & Forgot Password
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: (bool? newValue) {
-                                setState(() {
-                                  _rememberMe = newValue!;
-                                });
-                              },
-                              activeColor: Colors.white,
-                              checkColor: const Color(0xFF283593),
-                            ),
-                            const Text(
-                              'Remember me',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      style: const TextStyle(color: Colors.black87),
+                      decoration: InputDecoration(
+                        filled: true,
+                        hintText: "Confirm password",
+                        fillColor: Color.fromARGB(141, 255, 225, 219),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 247, 108, 1),
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            width: 2,
+                            color: const Color.fromARGB(255, 255, 168, 7),
                           ),
                         ),
-                      ],
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                      ),
                     ),
 
                     SizedBox(height: screenSize.height * 0.08),
                     // Sign In Button
                     ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
+                      onPressed: _isLoading ? null : _handleEmailSignup,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 120,
@@ -243,24 +305,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 5,
-                        shadowColor: const Color.fromARGB(156, 157, 87, 64),
+                        shadowColor: const Color.fromARGB(156, 251, 139, 102),
                       ),
-                      child: const Text(
-                        'Sign in',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Sign up',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
 
                     SizedBox(height: screenSize.height * 0.04),
 
                     TextButton(
-                      onPressed: () => context.go('/register'),
+                      onPressed: () => context.go('/login'),
                       child: Text(
-                        'Create new account',
+                        'Already have account',
                         style: TextStyle(
                           color: Colors.grey[700],
                           fontSize: 15,
@@ -303,7 +374,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(width: 12),
                             ElevatedButton(
-                              onPressed: _isLoading ? null : signInWithGoogle,
+                              onPressed: () {
+                                signInWithGoogle();
+                              },
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,

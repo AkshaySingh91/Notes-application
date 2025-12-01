@@ -19,6 +19,8 @@ dependencies:
   go_router: ^17.0.0
   google_sign_in: 5.4.4
   flutter_facebook_auth: ^7.1.2
+  provider: ^6.0.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -38,4 +40,5 @@ flutter:
     - assets/appIcon.png
     - assets/appLogo.png
     - assets/loaderAnimation.gif
+    - assets/userimage.png
  
