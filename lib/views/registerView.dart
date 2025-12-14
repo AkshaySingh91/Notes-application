@@ -1,10 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:my_learning_app/main.dart';
+import 'package:my_learning_app/services/auth/authExceptions.dart';
+import 'package:my_learning_app/services/auth/authService.dart';
+import 'package:my_learning_app/utilities/showErrorDialog.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,13 +14,29 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
-  // bool _rememberMe = false;
+  bool _isPasswordSame = true;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _confirmPasswordController.addListener(() {
+      if (_confirmPasswordController.text != _passwordController.text) {
+        setState(() {
+          _isPasswordSame = false;
+        });
+      } else {
+        setState(() {
+          _isPasswordSame = true;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -43,87 +58,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         _isLoading = true;
       });
-      final UserCredential userCredential = await Constants().auth
-          .createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
-      final User? user = userCredential.user;
-      if (user != null) {
-        await _saveUserToFirestore(user, _nameController.text);
-        // Navigate to home after successful signup
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, "/");
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e.message')));
-      print(e);
+      await AuthService.firebase().register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+    } on InvalidEmailException {
+      showErrorDialog(context, 'Invalid Email');
+    } on EmailAlreadyInUserException {
+      showErrorDialog(context, 'Email Already In Use');
+    } on WeakPasswordException {
+      showErrorDialog(context, 'Weak Password');
+    } on GenericAuthException {
+      showErrorDialog(context, 'Auth Error');
     } finally {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Future<User?> signInWithGoogle() async {
-    try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        // user cancelled
-        return null;
-      }
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-        accessToken: null,
-      );
-
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential);
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        final bool isNewUser =
-            userCredential.additionalUserInfo?.isNewUser ?? false;
-        if (isNewUser) {
-          await _saveUserToFirestore(user, user.displayName ?? "Google User");
-        }
-      }
-      return userCredential.user;
-    } catch (e, st) {
-      print('Google sign-in error: $e.message\n$st');
-      return null;
-    }
-  }
-
-  Future<void> _saveUserToFirestore(User user, String name) async {
-    try {
-      await Constants().firestore.collection("users").doc(user.uid).set({
-        'uid': user.uid,
-        'name': name,
-        'email': user.email,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print("Error on storing user data");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$e.message')));
     }
   }
 
@@ -265,32 +215,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: true,
-                      style: const TextStyle(color: Colors.black87),
-                      decoration: InputDecoration(
-                        filled: true,
-                        hintText: "Confirm password",
-                        fillColor: Color.fromARGB(141, 255, 225, 219),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            width: 2,
-                            color: const Color.fromARGB(255, 255, 168, 7),
+                    Container(
+                      decoration: BoxDecoration(),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _confirmPasswordController,
+                            obscureText: true,
+                            style: const TextStyle(color: Colors.black87),
+                            decoration: InputDecoration(
+                              filled: true,
+                              hintText: "Confirm password",
+                              fillColor: Color.fromARGB(141, 255, 225, 219),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  width: 2,
+                                  color: const Color.fromARGB(255, 255, 168, 7),
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 16,
+                              ),
+                            ),
                           ),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 16,
-                        ),
+                          if (!_isPasswordSame)
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              child: Row(
+                                spacing: 8,
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.red,
+                                    size: 12,
+                                  ),
+                                  const Text(
+                                    "Password must be same",
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-
                     SizedBox(height: screenSize.height * 0.08),
                     // Sign In Button
                     ElevatedButton(
@@ -374,9 +353,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(width: 12),
                             ElevatedButton(
-                              onPressed: () {
-                                signInWithGoogle();
-                              },
+                              onPressed: () {},
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,

@@ -63,8 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '292178276043',
     projectId: 'first-flutter-notes-ap',
     storageBucket: 'first-flutter-notes-ap.firebasestorage.app',
-    androidClientId: '292178276043-pdpm3frpr7sb5dvqr6heh15mppukh6l5.apps.googleusercontent.com',
-    iosClientId: '292178276043-dote08gmuce19o2u73vhvg2a9i79hvu5.apps.googleusercontent.com',
+    androidClientId:
+        '292178276043-pdpm3frpr7sb5dvqr6heh15mppukh6l5.apps.googleusercontent.com',
+    iosClientId:
+        '292178276043-dote08gmuce19o2u73vhvg2a9i79hvu5.apps.googleusercontent.com',
     iosBundleId: 'com.example.myLearningApp',
   );
 
@@ -74,8 +76,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '292178276043',
     projectId: 'first-flutter-notes-ap',
     storageBucket: 'first-flutter-notes-ap.firebasestorage.app',
-    androidClientId: '292178276043-pdpm3frpr7sb5dvqr6heh15mppukh6l5.apps.googleusercontent.com',
-    iosClientId: '292178276043-dote08gmuce19o2u73vhvg2a9i79hvu5.apps.googleusercontent.com',
+    androidClientId:
+        '292178276043-pdpm3frpr7sb5dvqr6heh15mppukh6l5.apps.googleusercontent.com',
+    iosClientId:
+        '292178276043-dote08gmuce19o2u73vhvg2a9i79hvu5.apps.googleusercontent.com',
     iosBundleId: 'com.example.myLearningApp',
   );
 
@@ -87,5 +91,4 @@ class DefaultFirebaseOptions {
     authDomain: 'first-flutter-notes-ap.firebaseapp.com',
     storageBucket: 'first-flutter-notes-ap.firebasestorage.app',
   );
-
 }

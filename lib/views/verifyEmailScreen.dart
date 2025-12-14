@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:my_learning_app/provider/authProvider.dart';
+import 'package:my_learning_app/services/auth/authService.dart';
+import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:provider/provider.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
@@ -73,8 +72,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               SizedBox(height: 10),
               TextButton(
                 onPressed: () async {
-                  await FirebaseAuth.instance.currentUser
-                      ?.sendEmailVerification();
+                  await AuthService.firebase().sendEmailVerification();
                 },
                 child: Text("Resend Email"),
               ),

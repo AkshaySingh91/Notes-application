@@ -1,1 +1,41 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"first-flutter-notes-ap","appId":"1:292178276043:android:9441d4466dca6f3b8a354e","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"first-flutter-notes-ap","appId":"1:292178276043:ios:9a04c62e416383ec8a354e","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"first-flutter-notes-ap","appId":"1:292178276043:ios:9a04c62e416383ec8a354e","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"first-flutter-notes-ap","configurations":{"android":"1:292178276043:android:9441d4466dca6f3b8a354e","ios":"1:292178276043:ios:9a04c62e416383ec8a354e","macos":"1:292178276043:ios:9a04c62e416383ec8a354e","web":"1:292178276043:web:e0372f4c1280235e8a354e","windows":"1:292178276043:web:9bb22b2ecf41afc88a354e"}}}}}}
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "first-flutter-notes-ap",
+                    "appId": "1:292178276043:android:9441d4466dca6f3b8a354e",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "first-flutter-notes-ap",
+                    "appId": "1:292178276043:ios:9a04c62e416383ec8a354e",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "macos": {
+                "default": {
+                    "projectId": "first-flutter-notes-ap",
+                    "appId": "1:292178276043:ios:9a04c62e416383ec8a354e",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "macos/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "first-flutter-notes-ap",
+                    "configurations": {
+                        "android": "1:292178276043:android:9441d4466dca6f3b8a354e",
+                        "ios": "1:292178276043:ios:9a04c62e416383ec8a354e",
+                        "macos": "1:292178276043:ios:9a04c62e416383ec8a354e",
+                        "web": "1:292178276043:web:e0372f4c1280235e8a354e",
+                        "windows": "1:292178276043:web:9bb22b2ecf41afc88a354e"
+                    }
+                }
+            }
+        }
+    }
+}

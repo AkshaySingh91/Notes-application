@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:my_learning_app/main.dart';
+import 'package:my_learning_app/services/auth/authExceptions.dart';
+import 'package:my_learning_app/services/auth/authService.dart';
+import 'package:my_learning_app/utilities/showErrorDialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,56 +24,20 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = true;
       });
-      final user = await Constants().auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      await AuthService.firebase().login(
+        _emailController.text,
+        _passwordController.text,
       );
-
-      print(user);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
-      }
-      print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.code)));
-    } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } on WrongPasswordException {
+      showErrorDialog(context, 'Invalid Credential');
+    } on UserNotFoundException {
+      showErrorDialog(context, 'User not found');
+    } on GenericAuthException {
+      showErrorDialog(context, 'Auth Error');
     } finally {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Future<User?> signInWithGoogle() async {
-    try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        // user cancelled
-        return null;
-      }
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-        accessToken: null,
-      );
-
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential);
-      print(FirebaseAuth.instance.currentUser?.emailVerified);
-
-      return userCredential.user;
-    } catch (e, st) {
-      print('Google sign-in error: $e.message\n$st');
-      return null;
     }
   }
 
@@ -189,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Remember Me & Forgot Password
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -303,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(width: 12),
                             ElevatedButton(
-                              onPressed: _isLoading ? null : signInWithGoogle,
+                              onPressed: null,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,

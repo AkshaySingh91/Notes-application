@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:my_learning_app/services/auth/authService.dart';
 
 class Noteview extends StatefulWidget {
   const Noteview({super.key});
@@ -16,12 +16,12 @@ class _NoteViewScreen extends State<Noteview> {
           context: context,
           builder: (BuildContext builder) {
             return AlertDialog(
-              title: const Text("Delete Note?"),
+              title: const Text("You want to be logout?"),
               content: const Text("This cannot be undone."),
               actions: [
                 TextButton(
                   onPressed: () async {
-                    Navigator.of(context).pop(true);
+                    Navigator.pop(context, true);
                   },
                   child: Text("Confirm"),
                 ),
@@ -99,7 +99,7 @@ class _NoteViewScreen extends State<Noteview> {
               onTap: () async {
                 final res = await handleLogout();
                 if (res) {
-                  await FirebaseAuth.instance.signOut();
+                  await AuthService.firebase().logout();
                 }
               },
             ),

@@ -1,22 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_learning_app/provider/authProvider.dart';
+import 'package:my_learning_app/constants/appRoutesConstant.dart';
 import 'package:my_learning_app/routes/appRoutes.dart';
+import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:provider/provider.dart';
-
-class Constants {
-  final auth = FirebaseAuth.instance;
-  final firestore = FirebaseFirestore.instance;
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   try {
+    
     await Firebase.initializeApp();
     runApp(
       ChangeNotifierProvider(
@@ -26,24 +20,26 @@ void main() async {
     );
   } catch (e) {
     runApp(
-      Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Something went wrong while initializing the app.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$e',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                ),
-              ],
+      MaterialApp(
+        builder: (context, child) => Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Something went wrong while initializing the app.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$e',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -54,7 +50,6 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<MyAuthProvider>(context, listen: false);
@@ -63,7 +58,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Flutter Login UI',
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(textTheme: GoogleFonts.interTextTheme()),
       routerConfig: myAppRoutes.router,
     );
@@ -114,7 +108,7 @@ class HomePage extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      context.go('/login');
+                      context.go(MyAppRouteConstants.loginRoute);
                     },
                     style: TextButton.styleFrom(
                       elevation: 5,
