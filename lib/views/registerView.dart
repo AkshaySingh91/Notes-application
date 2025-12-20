@@ -3,7 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_learning_app/services/auth/authExceptions.dart';
 import 'package:my_learning_app/services/auth/authService.dart';
+import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:my_learning_app/utilities/showErrorDialog.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -62,6 +64,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+      // ensure provider updates and notifies
+      if (!mounted) return;
+      final authProvider = Provider.of<MyAuthProvider>(context, listen: false);
+      await authProvider.updateUserFromFirebase();
+
+      // then navigate to verify-email (or let GoRouter redirect based on provider)
+      if (!mounted) return;
+      context.go('/verify-email');
     } on InvalidEmailException {
       showErrorDialog(context, 'Invalid Email');
     } on EmailAlreadyInUserException {

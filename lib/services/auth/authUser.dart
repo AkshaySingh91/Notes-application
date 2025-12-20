@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:my_learning_app/services/crud/noteService.dart';
 
 class MyAuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -25,6 +26,23 @@ class MyAuthProvider extends ChangeNotifier {
     });
   }
 
+  Future<void> updateUserFromFirebase() async {
+    try {
+      if (_auth.currentUser == null) {
+        _user = null;
+      } else {
+        await _auth.currentUser!.reload();
+        _user = _auth.currentUser;
+      }
+      _isInitialized = true;
+      notifyListeners();
+    } catch (e) {
+      // optional: handle/log error
+      _isInitialized = true;
+      notifyListeners();
+    }
+  }
+
   Future<void> refreshVerificationStatus() async {
     if (_auth.currentUser == null) return;
 
@@ -34,7 +52,11 @@ class MyAuthProvider extends ChangeNotifier {
     await _auth.currentUser!.reload();
     _user = _auth.currentUser; // Refresh local reference
 
-    _isCheckingVerification = false;
-    notifyListeners();
+    if (isEmailVerified) {
+      final noteService = NoteService();
+      final databaseUser = await noteService.getOrCreateUser(
+        email: currentUser!.email!,
+      );
+    }
   }
 }
