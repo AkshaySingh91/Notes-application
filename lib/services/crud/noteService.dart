@@ -1,14 +1,10 @@
 import 'dart:async';
 import 'package:my_learning_app/services/appSession/currentUserSession.dart';
-import 'package:my_learning_app/services/auth/authExceptions.dart';
 import 'package:my_learning_app/services/crud/crudExceptions.dart';
 import 'package:my_learning_app/services/crud/databaseService.dart';
 import 'package:sqflite/sqflite.dart';
-import "package:path/path.dart" show join;
-import 'package:path_provider/path_provider.dart';
-import 'package:my_learning_app/services/crud/userService.dart';
 
-final emailColumn = 'email';
+final userTableEmailColumn = 'email';
 
 final noteTable = 'notes';
 
@@ -255,7 +251,7 @@ class DatabaseUser {
 
   DatabaseUser.fromRow(Map<String, Object?> map)
     : id = map[idColumn] as int,
-      email = map[emailColumn] as String;
+      email = map[userTableEmailColumn] as String;
 
   @override
   String toString() {

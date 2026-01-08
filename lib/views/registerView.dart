@@ -4,9 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:my_learning_app/constants/AppColors.dart';
 import 'package:my_learning_app/services/auth/authExceptions.dart';
 import 'package:my_learning_app/services/auth/authService.dart';
-import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:my_learning_app/utilities/ShowErrorDialog.dart';
-import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

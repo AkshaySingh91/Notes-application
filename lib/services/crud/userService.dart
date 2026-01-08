@@ -5,6 +5,7 @@ import 'package:my_learning_app/services/crud/noteService.dart';
 import 'package:sqflite/sqflite.dart';
 
 final userTable = 'user';
+final emailColumn = 'email';
 
 class UserService {
   static final UserService _instance = UserService._internal();

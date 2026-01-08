@@ -111,7 +111,7 @@ class MyAppRoutes {
           location == MyAppRouteConstants.registerRoute ||
           location == MyAppRouteConstants.verifyEmailRoute) {
         return MyAppRouteConstants.homeRoute;
-        // return MyAppRouteConstants.tagsDashboardRoute;
+        return MyAppRouteConstants.textNoteFormModal;
       }
       return null;
     },

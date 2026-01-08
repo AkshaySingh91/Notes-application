@@ -110,9 +110,9 @@ class _AnimatedFloatingActionButtonState
             icon: Icons.text_fields_rounded,
             color: AppColors.primary,
             onClick: () {
+              _animationController.reset();
               widget.onAddTextNoteClick();
             },
-            tag: "addNewTextNote",
           ),
 
           // --- Voice Note Button ---
@@ -123,9 +123,9 @@ class _AnimatedFloatingActionButtonState
             icon: Icons.keyboard_voice_outlined,
             color: AppColors.secondary,
             onClick: () {
+              _animationController.reset();
               widget.onAddVoiceNoteClick();
             },
-            tag: "addNewVoiceNote",
           ),
 
           // --- Main FAB ---
@@ -162,7 +162,6 @@ class _AnimatedFloatingActionButtonState
     required IconData icon,
     required Color color,
     required VoidCallback onClick,
-    required String tag,
   }) {
     return AnimatedBuilder(
       animation: Listenable.merge([translation, expandAnimation]),
@@ -179,44 +178,41 @@ class _AnimatedFloatingActionButtonState
               color: color,
               borderRadius: BorderRadius.circular(50),
             ),
-            child: Hero(
-              tag: tag,
-              child: GestureDetector(
-                onTap: onClick,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Text expands horizontally
-                    SizeTransition(
-                      sizeFactor: expandAnimation,
-                      axis: Axis.horizontal,
-                      axisAlignment: 1.0, // Anchor to the right end
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: Text(
-                            label,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppColors.white,
-                            ),
-                            // Ensure text doesn't wrap during animation
-                            overflow: TextOverflow.clip,
-                            maxLines: 1,
+            child: GestureDetector(
+              onTap: onClick,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Text expands horizontally
+                  SizeTransition(
+                    sizeFactor: expandAnimation,
+                    axis: Axis.horizontal,
+                    axisAlignment: 1.0, // Anchor to the right end
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppColors.white,
                           ),
+                          // Ensure text doesn't wrap during animation
+                          overflow: TextOverflow.clip,
+                          maxLines: 1,
                         ),
                       ),
                     ),
-                    Icon(
-                      icon,
-                      fontWeight: FontWeight.bold,
-                      size: 24,
-                      color: AppColors.white,
-                    ),
-                  ],
-                ),
+                  ),
+                  Icon(
+                    icon,
+                    fontWeight: FontWeight.bold,
+                    size: 24,
+                    color: AppColors.white,
+                  ),
+                ],
               ),
             ),
           ),

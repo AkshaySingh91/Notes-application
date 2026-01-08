@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_learning_app/constants/tagsMaterialIconsList.dart';
@@ -113,6 +111,133 @@ class _TagFormModalState extends State<TagFormModal>
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isEditMode ? "Edit Tag" : "Create New Tag"),
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.cancel_sharp, size: 24),
+        ),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsetsGeometry.all(12),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _animatedIconPreview(),
+                const SizedBox(height: 24),
+
+                Column(
+                  children: [
+                    _buildTextField(
+                      label: "Tag Name",
+                      hintText: "e.g., Groceries",
+                      leadingIcon: Icons.label,
+                      controller: _tagName,
+                      keyboardType: TextInputType.text,
+                      validator: (value) {
+                        if (value != null && value.length > 20) {
+                          return 'Must be less than 20 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      label: "Priority",
+                      hintText: "1 (High) - 10 (low)",
+                      leadingIcon: Icons.sort,
+                      controller: _priority,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value != null && int.tryParse(value) == null) {
+                          return 'Must be a number';
+                        } else if (int.tryParse(value)! > 10 ||
+                            int.tryParse(value)! < 1) {
+                          return 'Must be from 1 to 10';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 40),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: Colors.grey),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final isValid = _formKey.currentState!.validate();
+                          if (isValid) {
+                            if (isEditMode) {
+                              _saveNoteTag(context);
+                            } else {
+                              _createNewTag(context);
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors
+                              .primary, // Make sure AppColors.primary exists or use Colors.blue
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+
+                        child: const Text(
+                          "Save Tag",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // components
   Widget _buildFlipFace(bool isUnder) {
     // when icon takes more than 90 degree will change icon to selected on so that user dont get to know when it changed
     final IconData icon = isUnder
@@ -189,130 +314,6 @@ class _TagFormModalState extends State<TagFormModal>
             style: TextStyle(fontSize: 12, color: AppColors.body),
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditMode ? "Edit Tag" : "Create New Tag"),
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(Icons.cancel_sharp, size: 24),
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsetsGeometry.all(12),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _animatedIconPreview(),
-              const SizedBox(height: 24),
-
-              Column(
-                children: [
-                  _buildTextField(
-                    label: "Tag Name",
-                    hintText: "e.g., Groceries",
-                    leadingIcon: Icons.label,
-                    controller: _tagName,
-                    keyboardType: TextInputType.text,
-                    validator: (value) {
-                      if (value != null && value.length > 20) {
-                        return 'Must be less than 20 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    label: "Priority",
-                    hintText: "1 (High) - 10 (low)",
-                    leadingIcon: Icons.sort,
-                    controller: _priority,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value != null && int.tryParse(value) == null) {
-                        return 'Must be a number';
-                      } else if (int.tryParse(value)! > 10 ||
-                          int.tryParse(value)! < 1) {
-                        return 'Must be from 1 to 10';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 40),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Colors.grey),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final isValid = _formKey.currentState!.validate();
-                        if (isValid) {
-                          if (isEditMode) {
-                            _saveNoteTag(context);
-                          } else {
-                            _createNewTag(context);
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors
-                            .primary, // Make sure AppColors.primary exists or use Colors.blue
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-
-                      child: const Text(
-                        "Save Tag",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
