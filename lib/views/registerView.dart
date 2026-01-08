@@ -65,14 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      // ensure provider updates and notifies
-      if (!mounted) return;
-      final authProvider = Provider.of<MyAuthProvider>(context, listen: false);
-      await authProvider.updateUserFromFirebase();
-
-      // then navigate to verify-email (or let GoRouter redirect based on provider)
-      if (!mounted) return;
-      context.go('/verify-email');
     } on InvalidEmailException {
       showErrorDialog(context, 'Invalid Email');
     } on EmailAlreadyInUserException {

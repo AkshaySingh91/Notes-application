@@ -62,7 +62,7 @@ class MyAppRoutes {
         path: MyAppRouteConstants.tagFormModal,
         pageBuilder: (context, state) {
           return CustomTransitionPage(
-            child: TagModal(existingTag: state.extra as NoteTag?),
+            child: TagFormModal(existingTag: state.extra as NoteTag?),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   final tween = Tween<Offset>(
