@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_learning_app/constants/AppColors.dart';
 import 'package:my_learning_app/services/auth/authExceptions.dart';
 import 'package:my_learning_app/services/auth/authService.dart';
 import 'package:my_learning_app/services/auth/authUser.dart';
-import 'package:my_learning_app/utilities/showErrorDialog.dart';
+import 'package:my_learning_app/utilities/ShowErrorDialog.dart';
 import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -92,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final Size screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF), // Off-white background
+      backgroundColor: AppColors.scaffold, // Off-white background
       body: Stack(
         children: [
           Center(
@@ -122,7 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Text(
                             "Create an account to add your all notes at one place.",
                             style: TextStyle(
-                              color: Colors.black,
+                              color: AppColors.textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -134,11 +135,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 40),
                     TextFormField(
                       controller: _nameController,
-                      style: const TextStyle(color: Colors.black87),
+                      style: const TextStyle(color: AppColors.textSecondary),
                       keyboardType: TextInputType.name,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color.fromARGB(141, 255, 225, 219),
+                        fillColor: AppColors.inputFill,
                         hintText: "Your name",
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -148,7 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             width: 2,
-                            color: const Color.fromARGB(255, 255, 168, 7),
+                            color: AppColors.primaryVariant,
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -160,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _emailController,
-                      style: const TextStyle(color: Colors.black87),
+                      style: const TextStyle(color: AppColors.textSecondary),
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         filled: true,
@@ -174,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             width: 2,
-                            color: const Color.fromARGB(255, 255, 168, 7),
+                            color: AppColors.primaryVariant,
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -189,7 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
-                      style: const TextStyle(color: Colors.black87),
+                      style: const TextStyle(color: AppColors.textSecondary),
                       decoration: InputDecoration(
                         filled: true,
                         hintText: "Password",
@@ -202,7 +203,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             width: 2,
-                            color: const Color.fromARGB(255, 255, 168, 7),
+                            color: AppColors.primaryVariant,
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -214,7 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             _isPasswordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                            color: Colors.grey,
+                            color: AppColors.icon,
                           ),
                           onPressed: () {
                             setState(() {
@@ -232,7 +233,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: true,
-                            style: const TextStyle(color: Colors.black87),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
                             decoration: InputDecoration(
                               filled: true,
                               hintText: "Confirm password",
@@ -245,7 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: const Color.fromARGB(255, 255, 168, 7),
+                                  color: AppColors.primaryVariant,
                                 ),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
@@ -262,14 +265,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 children: [
                                   Icon(
                                     Icons.warning_amber_rounded,
-                                    color: Colors.red,
+                                    color: AppColors.danger,
                                     size: 12,
                                   ),
                                   const Text(
                                     "Password must be same",
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
-                                      color: Colors.red,
+                                      color: AppColors.danger,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                     ),
@@ -289,7 +292,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           horizontal: 120,
                           vertical: 10,
                         ),
-                        backgroundColor: Colors.amber[900],
+                        backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -301,14 +304,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 strokeWidth: 2,
                               ),
                             )
                           : const Text(
                               'Sign up',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -322,7 +325,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Text(
                         'Already have account',
                         style: TextStyle(
-                          color: Colors.grey[700],
+                          color: AppColors.icon,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -335,7 +338,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Text(
                           "Or continue with",
                           style: TextStyle(
-                            color: Colors.amber[900],
+                            color: AppColors.primary,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -357,7 +360,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               child: Icon(
                                 Icons.facebook,
-                                color: const Color.fromARGB(255, 96, 96, 96),
+                                color: AppColors.icon,
                                 size: 32,
                               ),
                             ),
@@ -375,7 +378,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               child: Icon(
                                 FontAwesomeIcons.google,
-                                color: const Color.fromARGB(255, 96, 96, 96),
+                                color: AppColors.icon,
                                 size: 32,
                               ),
                             ),
@@ -394,7 +397,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               child: Icon(
                                 Icons.apple,
-                                color: const Color.fromARGB(255, 96, 96, 96),
+                                color: AppColors.icon,
                                 size: 32,
                               ),
                             ),
@@ -409,10 +412,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           if (_isLoading)
             Container(
-              color: const Color.fromARGB(121, 0, 0, 0),
+              color: AppColors.black.withOpacity(0.47),
               child: const Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                 ),
               ),
             ),

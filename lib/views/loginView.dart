@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_learning_app/services/auth/authExceptions.dart';
 import 'package:my_learning_app/services/auth/authService.dart';
-import 'package:my_learning_app/utilities/showErrorDialog.dart';
+import 'package:my_learning_app/utilities/ShowErrorDialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

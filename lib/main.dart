@@ -1,16 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:my_learning_app/constants/appRoutesConstant.dart';
 import 'package:my_learning_app/routes/appRoutes.dart';
 import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:provider/provider.dart';
+import 'package:my_learning_app/utilities/AppColors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    
     await Firebase.initializeApp();
     runApp(
       ChangeNotifierProvider(
@@ -58,7 +57,47 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Flutter Login UI',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(textTheme: GoogleFonts.interTextTheme()),
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: AppColors.scaffold,
+
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.scaffold,
+          elevation: 0,
+          foregroundColor: AppColors.textPrimary,
+        ),
+
+        cardTheme: CardThemeData(
+          color: AppColors.surface,
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.textPrimary,
+        ),
+
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+        ),
+
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+          bodyMedium: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+        ),
+
+        iconTheme: const IconThemeData(color: AppColors.icon),
+      ),
       routerConfig: myAppRoutes.router,
     );
   }
@@ -70,7 +109,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.scaffold,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
@@ -89,17 +128,18 @@ class HomePage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.amber,
+                  color: AppColors.primary,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
               Text(
                 "Personal notes application",
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w900,
-                  color: Colors.amber[700],
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 60),
@@ -112,8 +152,8 @@ class HomePage extends StatelessWidget {
                     },
                     style: TextButton.styleFrom(
                       elevation: 5,
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.deepOrange[300],
+                      foregroundColor: AppColors.white,
+                      backgroundColor: AppColors.primary,
                       textStyle: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -135,8 +175,8 @@ class HomePage extends StatelessWidget {
                     },
                     style: TextButton.styleFrom(
                       elevation: 5,
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.deepOrange[300],
+                      foregroundColor: AppColors.white,
+                      backgroundColor: AppColors.primary,
                       textStyle: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,

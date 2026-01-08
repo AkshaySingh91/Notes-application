@@ -1,7 +1,7 @@
 // test/widget_test.dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:my_learning_app/views/loginView.dart';
+import 'package:my_learning_app/views/LoginView.dart';
 
 void main() {
   testWidgets('NoteCard displays title correctly', (WidgetTester tester) async {

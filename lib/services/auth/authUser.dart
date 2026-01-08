@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:my_learning_app/services/crud/noteService.dart';
+import 'package:my_learning_app/services/appSession/currentUserSession.dart';
+import 'package:my_learning_app/services/crud/userService.dart';
 
 class MyAuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,9 +20,12 @@ class MyAuthProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    _auth.authStateChanges().listen((User? u) {
+    _auth.authStateChanges().listen((User? u) async {
       _user = u;
       _isInitialized = true;
+      await UserSession.initializeForUser(
+        currentUser == null ? "" : currentUser!.email!,
+      );
       notifyListeners();
     });
   }
@@ -53,10 +57,11 @@ class MyAuthProvider extends ChangeNotifier {
     _user = _auth.currentUser; // Refresh local reference
 
     if (isEmailVerified) {
-      final noteService = NoteService();
-      final databaseUser = await noteService.getOrCreateUser(
+      final userService = UserService();
+      final databaseUser = await userService.getOrCreateUser(
         email: currentUser!.email!,
       );
+      await UserSession.initializeForUser(currentUser!.email!);
     }
   }
 }
