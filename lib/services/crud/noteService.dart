@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:my_learning_app/services/appSession/currentUserSession.dart';
 import 'package:my_learning_app/services/crud/crudExceptions.dart';
 import 'package:my_learning_app/services/crud/databaseService.dart';
+import 'package:my_learning_app/services/crud/tagService.dart';
 import 'package:sqflite/sqflite.dart';
 
 final userTableEmailColumn = 'email';
 
 final noteTable = 'notes';
+final noteTagTable = 'note_tags';
 
 final idColumn = 'id';
 final userIdColumn = 'user_id';
@@ -17,6 +19,9 @@ final createdAtColumn = 'created_at';
 final updatedAtColumn = 'updated_at';
 final isDoneColumn = 'is_done';
 final isSyncedWithCloudColumn = 'is_synced_with_cloud';
+
+final tagIdColumn = 'tag_id';
+final noteIdColumn = 'note_id';
 
 final class NoteService {
   Database? _db;
@@ -76,6 +81,7 @@ final class NoteService {
   Future<DatabaseNote> createNote({
     required String title,
     required String body,
+    required List<NoteTag> noteTags,
   }) async {
     // get database instance
     final db = await DatabaseService().database;
@@ -83,13 +89,14 @@ final class NoteService {
     final dbUser = UserSession.currentDbUser;
 
     final createdAt = DateTime.now().toString();
+    // first note will insert
     final noteId = await db.insert(noteTable, {
       userIdColumn: dbUser.id,
       titleColumn: title,
       bodyColumn: body,
       textTypeColumn: 'text',
       createdAtColumn: createdAt,
-      updatedAtColumn: null,
+      updatedAtColumn: createdAt,
       isSyncedWithCloudColumn: 0,
       isDoneColumn: 0,
     });
@@ -97,8 +104,15 @@ final class NoteService {
     if (noteId == 0) {
       throw NoteCreationException();
     }
-    // add updated notes in stream
+    // after that all note tag will insert
+    for (final tag in noteTags) {
+      await db.insert(noteTagTable, {
+        noteIdColumn: noteId,
+        tagIdCol: tag.tagId,
+      });
+    }
 
+    // add updated notes in stream
     final newNote = DatabaseNote(
       id: noteId,
       userId: dbUser.id,
@@ -114,6 +128,30 @@ final class NoteService {
     _notes.add(newNote);
     _noteStreamController.sink.add(_notes);
     return newNote;
+  }
+
+  Future<List<NoteTag>> getAllTagsOfSpecificNote({required int noteId}) async {
+    //1. first we get note id
+    //2. check if note exist
+    //3. after that we have to fetch all tagsid whose noteid given
+    //4. for all those tagid we have to get all tags from tag table
+    //5. wrap it in NoteTag class & send List<NoteTag>
+    await getNote(id: noteId);
+    final db = await DatabaseService().database;
+    final tagMapList = await db.query(
+      noteTagTable,
+      where: '$noteIdColumn  = ?',
+      whereArgs: [noteId],
+    );
+    //eg; [{note_id: 1, tag_id: 2}, {note_id: 1, tag_id: 3}]
+    List<NoteTag> allTags = [];
+    final tagService = TagService();
+    for (final idMap in tagMapList) {
+      final tagId = idMap[tagIdColumn].toString();
+      final tag = await tagService.getNoteTag(tagId: int.tryParse(tagId) ?? 0);
+      allTags.add(tag);
+    }
+    return allTags;
   }
 
   Future<DatabaseNote> getNote({required int id}) async {
@@ -144,6 +182,7 @@ final class NoteService {
     required int id,
     required String title,
     required String body,
+    required List<NoteTag> noteTags,
   }) async {
     final db = await DatabaseService().database;
     final dbUser = UserSession.currentDbUser;
@@ -159,6 +198,33 @@ final class NoteService {
 
     if (updateCount == 0) {
       throw CouldNotUpdateNote();
+    }
+    //1. user may add or delete some tags
+    //2. first get all old tags
+    //3. delete those which are not present in noteTags param
+    //4. add those which are present in noteTags param
+
+    final oldTag = await getAllTagsOfSpecificNote(noteId: id);
+
+    // tag that are present in old but absent in new are deleted
+    final deletedTags = oldTag.where(
+      (tag) => !noteTags.any((t) => tag.tagId == t.tagId),
+    );
+
+    for (final tag in deletedTags) {
+      await db.delete(
+        noteTagTable,
+        where: '$tagIdCol = ? AND $noteIdColumn = ?',
+        whereArgs: [tag.tagId, id],
+      );
+    }
+    // tag that are present in new but not in old is new
+    final newTags = noteTags.where(
+      (tag) => !oldTag.any((t) => tag.tagId == t.tagId),
+    );
+
+    for (final tag in newTags) {
+      await db.insert(noteTagTable, {noteIdColumn: id, tagIdColumn: tag.tagId});
     }
     final updatedNote = await getNote(id: id);
 
@@ -290,15 +356,15 @@ class DatabaseNote {
     required this.isDone,
   });
   DatabaseNote.fromRow(Map<String, Object?> map)
-    : id = map[idColumn],
-      userId = map[userIdColumn],
-      title = map[titleColumn],
-      body = map[bodyColumn],
-      textType = map[textTypeColumn],
-      createdAt = map[createdAtColumn],
-      updatedAt = map[updatedAtColumn],
-      isDone = map[isDoneColumn],
-      isSyncedWithCloud = map[isSyncedWithCloudColumn];
+    : id = map[idColumn] as int,
+      userId = map[userIdColumn] as int,
+      title = map[titleColumn] as String,
+      body = map[bodyColumn] as String,
+      textType = map[textTypeColumn] as String,
+      createdAt = map[createdAtColumn] as String,
+      updatedAt = map[updatedAtColumn] as String,
+      isDone = map[isDoneColumn] as int,
+      isSyncedWithCloud = map[isSyncedWithCloudColumn] as int;
 
   @override
   String toString() {

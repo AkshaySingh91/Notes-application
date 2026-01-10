@@ -48,25 +48,6 @@ class _NoteViewScreen extends State<Noteview>
     _animationController.dispose();
   }
 
-  // Future<void> updateNote(int id, String? newNote) async {
-  //   if (newNote != null && newNote.trim().isNotEmpty) {
-  //     await _noteService.updateNoteText(id: id, text: newNote);
-  //   }
-  // }
-
-  // Future<String?> showUpdateNoteModal(
-  //   BuildContext context,
-  //   DatabaseNote noteToUpdate,
-  // ) async {
-  //   print(noteToUpdate);
-  //   return await showDialog<String?>(
-  //     context: context,
-  //     // this builder will run only when dialog will open at once
-  //     builder: (BuildContext builder) =>
-  //         UpdateNoteModal(oldtext: noteToUpdate.text),
-  //   );
-  // }
-
   Future<void> deleteNote(int id) async {
     _noteService.deleteNote(id: id);
   }

@@ -7,7 +7,7 @@ import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:my_learning_app/services/crud/noteService.dart';
 import 'package:my_learning_app/services/crud/tagService.dart';
 import 'package:my_learning_app/views/notes/addNoteScreen/TextNoteFormModal.dart';
-import 'package:my_learning_app/views/notes/Noteview.dart';
+import 'package:my_learning_app/views/notes/noteScreen/Noteview.dart';
 import 'package:my_learning_app/views/LoginView.dart';
 import 'package:my_learning_app/views/RegisterView.dart';
 import 'package:my_learning_app/views/SplashScreen.dart';

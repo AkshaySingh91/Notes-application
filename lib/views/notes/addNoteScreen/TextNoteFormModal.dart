@@ -4,9 +4,7 @@ import 'package:my_learning_app/constants/appColors.dart';
 import 'package:my_learning_app/constants/tagsMaterialIconsList.dart';
 import 'package:my_learning_app/services/crud/noteService.dart';
 import 'package:my_learning_app/services/crud/tagService.dart';
-import 'package:my_learning_app/services/crud/userService.dart';
 import 'package:my_learning_app/utilities/ShowErrorDialog.dart';
-import 'package:vector_math/vector_math_64.dart' show Vector3;
 
 class AddNewTextNoteScreen extends StatefulWidget {
   final DatabaseNote? existingTextNote;
@@ -23,6 +21,7 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
   List<NoteTag> selectedTag = [];
 
   late final DraggableScrollableController _sheetController;
+  final _rowScrollController = ScrollController();
 
   final TextEditingController _title = TextEditingController();
   final TextEditingController _body = TextEditingController();
@@ -33,46 +32,79 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
   final _tagService = TagService();
   List<NoteTag> _userNoteTags = [];
 
+  void _handleSheetController() {
+    // safe access — don't call setState if unmounted
+    double pixels = 0;
+    try {
+      if (_sheetController.isAttached) {
+        pixels = _sheetController.pixels;
+      }
+    } catch (_) {
+      pixels = 0;
+    }
+
+    if (!mounted) return;
+
+    if (!pixels.isNaN && pixels <= 0) {
+      setState(() {
+        isSheetOpen = false;
+      });
+    }
+  }
+
+  void _handleTitleFocusChange() {
+    if (!_titleFocusNode.hasFocus) return;
+    if (!mounted) return;
+    setState(() {
+      isSheetOpen = false;
+    });
+    try {
+      if (_sheetController.isAttached) {
+        _sheetController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.bounceOut,
+        );
+      }
+    } catch (_) {}
+  }
+
+  void _handleBodyFocusChange() {
+    if (!_bodyFocusNode.hasFocus) return;
+    if (!mounted) return;
+    setState(() {
+      isSheetOpen = false;
+    });
+    try {
+      if (_sheetController.isAttached) {
+        _sheetController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.bounceOut,
+        );
+      }
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     isEditMode = widget.isEditMode;
     if (isEditMode) {
       _title.text = widget.existingTextNote!.title;
       _body.text = widget.existingTextNote!.body;
+      // fetch note all tags
+      _fetchAllNoteTags(noteId: widget.existingTextNote!.id);
     }
     _getAllNoteTags();
+
     _sheetController = DraggableScrollableController();
-    _sheetController.addListener(() {
-      if (!_sheetController.pixels.isNaN && _sheetController.pixels <= 0) {
-        setState(() {
-          isSheetOpen = false;
-        });
-      }
-    });
-    _titleFocusNode.addListener(() {
-      if (_titleFocusNode.hasFocus) {
-        setState(() {
-          isSheetOpen = false;
-        });
-        _sheetController.animateTo(
-          0.0,
-          duration: Duration(milliseconds: 100),
-          curve: Curves.bounceOut,
-        );
-      }
-    });
-    _bodyFocusNode.addListener(() {
-      if (_bodyFocusNode.hasFocus) {
-        setState(() {
-          isSheetOpen = false;
-        });
-        _sheetController.animateTo(
-          0.0,
-          duration: Duration(milliseconds: 100),
-          curve: Curves.bounceOut,
-        );
-      }
-    });
+    _sheetController.addListener(_handleSheetController);
+
+    // use named listeners so we can remove them in dispose
+    _titleFocusNode.addListener(_handleTitleFocusChange);
+    _bodyFocusNode.addListener(_handleBodyFocusChange);
+
+    WidgetsBinding.instance.addPostFrameCallback((Duration timestamp) {});
     super.initState();
   }
 
@@ -103,45 +135,90 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
 
   @override
   void dispose() {
-    super.dispose();
+    // remove listeners before disposing nodes/controllers
+    _titleFocusNode.removeListener(_handleTitleFocusChange);
+    _bodyFocusNode.removeListener(_handleBodyFocusChange);
+    _sheetController.removeListener(_handleSheetController);
+
     _title.dispose();
     _body.dispose();
+
+    _titleFocusNode.dispose();
+    _bodyFocusNode.dispose();
     _sheetController.dispose();
+    _rowScrollController.dispose();
+    super.dispose();
+  }
+
+  void _moveRowAfterAddingTag() {
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (_rowScrollController.hasClients) {
+        _rowScrollController.animateTo(
+          _rowScrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   // new note methods
   Future<void> _addNewNote({required BuildContext context}) async {
     // if user save new note
     // validate new note & than save in database
-    if (_title.text.trim().isEmpty || _body.text.trim().isEmpty) {
+    try {
+      if (_title.text.trim().isEmpty || _body.text.trim().isEmpty) {
+        if (!mounted) return;
+        context.pop();
+        return;
+      }
+      final DatabaseNote dbNote = await _noteService.createNote(
+        title: _title.text,
+        body: _body.text,
+        noteTags: selectedTag,
+      );
       if (!mounted) return;
       context.pop();
-      return;
+    } catch (e) {
+      showErrorDialog(context, e.toString());
     }
-    final DatabaseNote dbNote = await _noteService.createNote(
-      title: _title.text,
-      body: _body.text,
-    );
-    if (!mounted) return;
-    context.pop();
+  }
+
+  Future<void> _fetchAllNoteTags({required int noteId}) async {
+    try {
+      List<NoteTag> noteTags = await _noteService.getAllTagsOfSpecificNote(
+        noteId: noteId,
+      );
+
+      setState(() {
+        selectedTag = noteTags;
+      });
+    } catch (e) {
+      showErrorDialog(context, e.toString());
+    }
   }
 
   // if edit mode is true
   Future<void> _updateNote({required BuildContext context}) async {
-    // if user save new note
-    // validate new note & than save in database
-    if (_title.text.trim().isEmpty || _body.text.trim().isEmpty) {
+    try {
+      // if user save new note
+      // validate new note & than save in database
+      if (_title.text.trim().isEmpty || _body.text.trim().isEmpty) {
+        if (!mounted) return;
+        context.pop();
+        return;
+      }
+      final DatabaseNote dbNote = await _noteService.updateNoteText(
+        id: widget.existingTextNote!.id,
+        title: _title.text,
+        body: _body.text,
+        noteTags: selectedTag,
+      );
       if (!mounted) return;
       context.pop();
-      return;
+    } catch (e) {
+      showErrorDialog(context, e.toString());
     }
-    final DatabaseNote dbNote = await _noteService.updateNoteText(
-      id: widget.existingTextNote!.id,
-      title: _title.text,
-      body: _body.text,
-    );
-    if (!mounted) return;
-    context.pop();
   }
 
   //get all user note tags
@@ -260,6 +337,7 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
                   ],
                 ),
               ),
+
               DraggableScrollableSheet(
                 controller: _sheetController,
                 initialChildSize: 0,
@@ -349,6 +427,7 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
                                             _userNoteTags[index].tagId,
                                       );
                                     } else {
+                                      _moveRowAfterAddingTag();
                                       selectedTag.add(_userNoteTags[index]);
                                     }
                                   });
@@ -400,8 +479,9 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
                   );
                 },
               ),
+
               ListenableBuilder(
-                listenable: _sheetController,
+                listenable: Listenable.merge([_sheetController]),
                 builder: (context, child) {
                   double currentSize = 0;
                   if (_sheetController.isAttached) {
@@ -417,30 +497,82 @@ class _AddNewTextNoteScreenState extends State<AddNewTextNoteScreen> {
 
                   return Positioned(
                     left: 12,
+                    right: 12,
                     bottom: currentSize <= 0 ? 24 : sheetHeightInPixels,
-                    child: TextButton(
-                      onPressed: () => _openSheet(context: context),
-                      style: ButtonStyle(
-                        side: WidgetStatePropertyAll(
-                          BorderSide(
-                            width: isSheetOpen ? 2 : 1,
-                            color: isSheetOpen
-                                ? AppColors.primary
-                                : AppColors.primaryVariant,
+                    child: Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => _openSheet(context: context),
+                          style: ButtonStyle(
+                            side: WidgetStatePropertyAll(
+                              BorderSide(
+                                width: isSheetOpen ? 2 : 1,
+                                color: isSheetOpen
+                                    ? AppColors.primary
+                                    : AppColors.primaryVariant,
+                              ),
+                            ),
+                            backgroundColor: WidgetStatePropertyAll(
+                              isSheetOpen
+                                  ? AppColors.primaryVariant
+                                  : Color.fromARGB(255, 255, 191, 73),
+                            ),
+                          ),
+                          child: Text("Add Tag"),
+                        ),
+
+                        Expanded(
+                          child: SizedBox(
+                            height: 40,
+                            child: _noteTagRow(selectedTag: selectedTag),
                           ),
                         ),
-                        backgroundColor: WidgetStatePropertyAll(
-                          isSheetOpen
-                              ? AppColors.primaryVariant
-                              : Color.fromARGB(255, 255, 191, 73),
-                        ),
-                      ),
-                      child: const Text("Add Tag"),
+                      ],
                     ),
                   );
                 },
               ),
             ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _noteTagRow({required List<NoteTag> selectedTag}) {
+    return Padding(
+      padding: EdgeInsetsGeometry.only(left: 6),
+      child: ListView.builder(
+        controller: _rowScrollController,
+        itemCount: selectedTag.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final materialIconName = selectedTag[index].materialIconName;
+          final icon = TagsMaterialIconsList.tagsIconsList
+              .firstWhere(
+                (element) {
+                  return element.keys.first == materialIconName;
+                },
+                orElse: () {
+                  return {'defalut': Icons.label};
+                },
+              )
+              .values
+              .first;
+          return Padding(
+            padding: EdgeInsetsGeometry.symmetric(horizontal: 3),
+            child: TextButton(
+              onPressed: () {},
+              style: ButtonStyle(
+                side: WidgetStatePropertyAll(
+                  BorderSide(width: 1, color: AppColors.primary),
+                ),
+                backgroundColor: WidgetStatePropertyAll(
+                  AppColors.primary.withOpacity(0.1),
+                ),
+              ),
+              child: Icon(icon, size: 24, color: AppColors.primary),
+            ),
           );
         },
       ),
