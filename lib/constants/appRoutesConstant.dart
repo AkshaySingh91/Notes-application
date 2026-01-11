@@ -8,4 +8,5 @@ class MyAppRouteConstants {
   static final String textNoteFormModal = '/textnote-form-modal';
   static final String tagsDashboardRoute = '/tags-dashboard';
   static final String tagFormModal = '/tags-dashboard/tag-form-modal';
+  static final String noteDetailRoute = '/note/:noteid';
 }

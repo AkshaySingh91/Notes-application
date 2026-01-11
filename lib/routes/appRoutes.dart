@@ -6,8 +6,9 @@ import 'package:my_learning_app/constants/appRoutesConstant.dart';
 import 'package:my_learning_app/services/auth/authUser.dart';
 import 'package:my_learning_app/services/crud/noteService.dart';
 import 'package:my_learning_app/services/crud/tagService.dart';
-import 'package:my_learning_app/views/notes/addNoteScreen/TextNoteFormModal.dart';
-import 'package:my_learning_app/views/notes/noteScreen/Noteview.dart';
+import 'package:my_learning_app/views/notes/noteDetailScreen/NoteDetailScreen.dart';
+import 'package:my_learning_app/views/notes/textNoteFormModal/TextNoteFormView.dart';
+import 'package:my_learning_app/views/notes/notesScreen/Notesview.dart';
 import 'package:my_learning_app/views/LoginView.dart';
 import 'package:my_learning_app/views/RegisterView.dart';
 import 'package:my_learning_app/views/SplashScreen.dart';
@@ -50,9 +51,8 @@ class MyAppRoutes {
       ),
       GoRoute(
         path: MyAppRouteConstants.textNoteFormModal,
-        builder: (context, state) => AddNewTextNoteScreen(
-          existingTextNote: state.extra as DatabaseNote?,
-        ),
+        builder: (context, state) =>
+            TextNoteFormView(existingTextNote: state.extra as DatabaseNote?),
       ),
       GoRoute(
         path: MyAppRouteConstants.tagsDashboardRoute,
@@ -76,6 +76,34 @@ class MyAppRoutes {
                     child: child,
                   );
                 },
+          );
+        },
+      ),
+      GoRoute(
+        name: 'note',
+        path: MyAppRouteConstants.noteDetailRoute,
+        builder: (context, state) {
+          final int noteid =
+              int.tryParse(state.pathParameters['noteid'].toString()) ?? 0;
+
+          final Map<String, dynamic>? data =
+              state.extra is Map<String, dynamic>?
+              ? state.extra as Map<String, dynamic>?
+              : null;
+
+          final String herotag = data?['herotag'] as String? ?? '';
+
+          final DatabaseNote? initialNote =
+              data?['initialnote'] as DatabaseNote?;
+
+          final List<NoteTag>? initialTags =
+              data?['initialtags'] as List<NoteTag>?;
+
+          return NoteDetailScreen(
+            noteId: noteid,
+            heroTag: herotag,
+            initialNote: initialNote,
+            initialTags: initialTags,
           );
         },
       ),
