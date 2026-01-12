@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_learning_app/constants/appRoutesConstant.dart';
 import 'package:my_learning_app/constants/tagsMaterialIconsList.dart';
 import 'package:my_learning_app/services/crud/noteService.dart';
 import 'package:my_learning_app/services/crud/tagService.dart';
 import 'package:my_learning_app/utilities/AppColors.dart';
+import 'package:my_learning_app/utilities/DateAndTimeConverter.dart';
 import 'package:my_learning_app/utilities/ShowErrorDialog.dart';
 
 class NoteDetailScreen extends StatefulWidget {
@@ -27,7 +32,9 @@ class NoteDetailScreen extends StatefulWidget {
 
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final _noteService = NoteService();
-  DatabaseNote? noteDetail = null;
+  bool isCopiedTooltipOpen = false;
+  Timer? _toolTipTimer;
+  DatabaseNote? fetchedNote;
 
   Future<DatabaseNote?> _fetchNote() async {
     try {
@@ -52,6 +59,38 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       showErrorDialog(context, e.toString());
       return [];
     }
+  }
+
+  Future<void> _copyTextBody({required String body}) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: body));
+      setState(() {
+        isCopiedTooltipOpen = true;
+      });
+      _toolTipTimer?.cancel();
+
+      _toolTipTimer = Timer.periodic(Duration(milliseconds: 600), (Timer _) {
+        if (!mounted) return;
+        setState(() {
+          isCopiedTooltipOpen = false;
+        });
+      });
+    } catch (e) {
+      showErrorDialog(context, e.toString());
+    }
+  }
+
+  @override
+  void initState() {
+    _fetchNoteAtOnce();
+    super.initState();
+  }
+
+  Future<void> _fetchNoteAtOnce() async {
+    final note = await _fetchNote();
+    setState(() {
+      fetchedNote = note;
+    });
   }
 
   @override
@@ -85,6 +124,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push(
+            MyAppRouteConstants.textNoteFormModal,
+            extra: fetchedNote,
+          );
+        },
+        backgroundColor: AppColors.primaryVariant,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.circular(30),
+        ),
+
+        child: const Icon(Icons.edit, size: 24, color: AppColors.black),
+      ),
+
       body: SafeArea(
         child: Hero(
           tag: widget.heroTag,
@@ -139,10 +193,18 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       }
                       DatabaseNote note = snapshot.data!;
 
+                      final createdAtDate = Dateandtimeconverter.getDateAndTime(
+                        dateAndTime: note.createdAt,
+                      )["date"];
+                      final updatedAtDate = Dateandtimeconverter.getDateAndTime(
+                        dateAndTime: note.updatedAt,
+                      )["date"];
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // title
                           Text(
                             note.title,
                             style: const TextStyle(
@@ -152,34 +214,196 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            note.body,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight(400),
-                              color: Color.fromARGB(255, 87, 87, 87),
-                            ),
+                          // date
+                          Row(
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.date_range,
+                                    size: 14,
+                                    color: AppColors.icon,
+                                    weight: 500,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    createdAtDate!,
+                                    style: const TextStyle(
+                                      color: Color.fromARGB(255, 74, 96, 107),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 20),
+                              if (createdAtDate != updatedAtDate)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+
+                                  children: [
+                                    const Icon(
+                                      Icons.edit,
+                                      size: 14,
+                                      color: AppColors.icon,
+                                      weight: 500,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      updatedAtDate!,
+                                      style: const TextStyle(
+                                        color: Color.fromARGB(255, 74, 96, 107),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsetsGeometry.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        child: TextButton(
+                                          onPressed: () =>
+                                              _copyTextBody(body: note.body),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.copy_rounded,
+                                                size: 16,
+                                                color: AppColors.icon,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                "Copy",
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.icon,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SelectableText(
+                                    note.body,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      height: 1.5,
+                                      fontWeight: FontWeight(400),
+                                      color: Color.fromARGB(255, 87, 87, 87),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              Positioned(
+                                right: 0,
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 300),
+                                  opacity: isCopiedTooltipOpen ? 1.0 : 0.0,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 270),
+                                    transform: Matrix4.translationValues(
+                                      0,
+                                      isCopiedTooltipOpen ? -20 : 0,
+                                      0,
+                                    ),
+                                    child: Container(
+                                      padding: EdgeInsetsGeometry.symmetric(
+                                        vertical: 3,
+                                        horizontal: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        "Text Copied!",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
+                          // tags
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Tags",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              FutureBuilder<List<NoteTag>>(
+                                future: _fetchAllNoteTags(),
+                                initialData: widget.initialTags,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasError) {
+                                    return Container(
+                                      padding: EdgeInsets.all(12),
+                                      color: AppColors.divider,
+                                      child: Text(
+                                        "${snapshot.error}",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: AppColors.danger,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    );
+                                  }
 
-                          FutureBuilder<List<NoteTag>>(
-                            future: _fetchAllNoteTags(),
-                            initialData: widget.initialTags,
-                            builder: (context, snapshot) {
-                              if (snapshot.hasError) {
-                                return Container(
-                                  child: Text("${snapshot.error}"),
-                                );
-                              }
-                              if (!snapshot.hasData) {
-                                return Container(
-                                  child: Text("No Note Tag found"),
-                                );
-                              }
-                              final noteTags = snapshot.data!;
+                                  if (!snapshot.hasData ||
+                                      snapshot.data != null &&
+                                          snapshot.data!.isEmpty) {
+                                    return Container(
+                                      padding: EdgeInsets.all(12),
+                                      color: AppColors.divider,
+                                      child: Text(
+                                        "No tags added",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final noteTags = snapshot.data!;
 
-                              return _noteTagRow(selectedTag: noteTags);
-                            },
+                                  return _noteTagRow(selectedTag: noteTags);
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       );
@@ -236,7 +460,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       textAlign: TextAlign.left,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                      
                         fontSize: 12,
                         color: AppColors.black,
                       ),

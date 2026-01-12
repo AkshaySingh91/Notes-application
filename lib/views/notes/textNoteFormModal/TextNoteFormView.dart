@@ -104,7 +104,9 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
     _titleFocusNode.addListener(_handleTitleFocusChange);
     _bodyFocusNode.addListener(_handleBodyFocusChange);
 
-    WidgetsBinding.instance.addPostFrameCallback((Duration timestamp) {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _titleFocusNode.requestFocus();
+    });
     super.initState();
   }
 
@@ -294,7 +296,7 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                         minLines: 1,
                         maxLines: 2,
                         style: const TextStyle(
-                          fontSize: 36,
+                          fontSize: 28,
                           color: AppColors.title,
                           fontWeight: FontWeight.w700,
                         ),
@@ -318,7 +320,9 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                           keyboardType: TextInputType.text,
                           expands: true,
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 18,
+                            height: 1.5,
+                            fontWeight: FontWeight(400),
                             color: AppColors.body,
                           ),
                           maxLines: null,
@@ -339,7 +343,7 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                     ],
                   ),
                 ),
-        
+
                 DraggableScrollableSheet(
                   controller: _sheetController,
                   initialChildSize: 0,
@@ -389,7 +393,7 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                               ],
                             ),
                           ),
-        
+
                           SliverPadding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             sliver: SliverGrid(
@@ -414,11 +418,11 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                                     )
                                     .values
                                     .first;
-        
+
                                 final isTagSelected = selectedTag.any(
                                   (t) => t.tagId == _userNoteTags[index].tagId,
                                 );
-        
+
                                 return InkWell(
                                   onTap: () {
                                     setState(() {
@@ -449,7 +453,8 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           iconData,
@@ -481,7 +486,7 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                     );
                   },
                 ),
-        
+
                 ListenableBuilder(
                   listenable: Listenable.merge([_sheetController]),
                   builder: (context, child) {
@@ -490,13 +495,13 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                       currentSize = _sheetController.size;
                     }
                     final mediaQuery = MediaQuery.of(context);
-        
+
                     final safeHeight =
                         mediaQuery.size.height -
                         mediaQuery.padding.top -
                         mediaQuery.padding.bottom;
                     final double sheetHeightInPixels = currentSize * safeHeight;
-        
+
                     return Positioned(
                       left: 12,
                       right: 12,
@@ -522,7 +527,7 @@ class _TextNoteFormViewState extends State<TextNoteFormView> {
                             ),
                             child: Text("Add Tag"),
                           ),
-        
+
                           Expanded(
                             child: SizedBox(
                               height: 40,

@@ -56,7 +56,6 @@ final class NoteService {
     final allNotes = await getAllNotes();
     _notes = allNotes;
     _noteStreamController.sink.add(_notes);
-    print("total notes are : ${_notes.length}");
   }
 
   Stream<List<DatabaseNote>> get stream => _noteStreamController.stream;
@@ -67,14 +66,6 @@ final class NoteService {
     } else {
       await _db!.close();
       _db = null;
-    }
-  }
-
-  Future<void> _ensureDBIsOpen() async {
-    try {
-      _db = await DatabaseService().database;
-    } catch (_) {
-      rethrow;
     }
   }
 
@@ -120,7 +111,7 @@ final class NoteService {
       body: body,
       textType: 'text',
       createdAt: createdAt,
-      updatedAt: null,
+      updatedAt: createdAt,
       isSyncedWithCloud: 0,
       isDone: 0,
     );
@@ -296,6 +287,104 @@ final class NoteService {
     // delete note from stream
     _notes.removeWhere((note) => note.id == id);
     _noteStreamController.sink.add(_notes);
+  }
+
+  Future<void> filterAndSortNotes({
+    required Map<String, dynamic> selection,
+  }) async {
+    try {
+      final db = await DatabaseService().database;
+      final dbUser = UserSession.currentDbUser;
+
+      // extract all data
+      final filter = selection["filterby"];
+      final sort = selection["sortby"];
+      final sortOrder = selection['sortorder'];
+
+      List<DatabaseNote> filterAndSorderNotes = [];
+      // filter data
+      if (filter is List<int> && filter.isNotEmpty) {
+        // get all notesid using tagIds
+        List<int> noteIds = [];
+
+        String placeHolder = List.filled(filter.length, '?').join(',');
+
+        final noteIdsObj = await db.query(
+          noteTagTable,
+          columns: [noteIdColumn],
+          where: '$tagIdCol IN ($placeHolder)',
+          whereArgs: filter,
+          distinct: true,
+        );
+        if (noteIdsObj.isNotEmpty) {
+          noteIds.addAll(noteIdsObj.map((e) => e['note_id'] as int));
+        }
+        // fetch all notes whose tag id given
+        for (final noteId in noteIds) {
+          final note = await db.query(
+            noteTable,
+            where: '$userIdCol = ? AND id = ?',
+            whereArgs: [dbUser.id, noteId],
+          );
+          if (note.isNotEmpty) {
+            final dbNote = DatabaseNote.fromRow(note.first);
+            filterAndSorderNotes.add(dbNote);
+          }
+        }
+      } else {
+        final allNotes = await getAllNotes();
+        filterAndSorderNotes = allNotes;
+      }
+      // sort data
+      if (sort is String &&
+          (sort == "createdat" || sort == "updatedat" || sort == "priority")) {
+        final order = sortOrder is String
+            ? sortOrder == "asc"
+                  ? "asc"
+                  : "desc"
+            : "asc";
+
+        if (order == "asc") {
+          // sorting in asc
+          filterAndSorderNotes.sort((d1, d2) {
+            final created1 = DateTime.parse(d1.createdAt);
+            final created2 = DateTime.parse(d2.createdAt);
+
+            final updated1 = DateTime.parse(d1.updatedAt);
+            final updated2 = DateTime.parse(d2.updatedAt);
+
+            if (sort == "createdat") {
+              return created1.compareTo(created2);
+            } else if (sort == "updatedat") {
+              return updated1.compareTo(updated2);
+            } else {
+              return 0;
+            }
+          });
+        } else {
+          // sorting in desc
+          filterAndSorderNotes.sort((d1, d2) {
+            final created1 = DateTime.parse(d1.createdAt);
+            final created2 = DateTime.parse(d2.createdAt);
+
+            final updated1 = DateTime.parse(d1.updatedAt);
+            final updated2 = DateTime.parse(d2.updatedAt);
+
+            if (sort == "createdat") {
+              return created2.compareTo(created1);
+            } else if (sort == "updatedat") {
+              return updated2.compareTo(updated1);
+            } else {
+              return 0;
+            }
+          });
+        }
+      }
+      _notes = filterAndSorderNotes;
+      _noteStreamController.sink.add(_notes);
+    } catch (e) {
+      print(e.toString());
+    }
   }
 }
 

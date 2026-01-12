@@ -5,6 +5,7 @@ import 'package:my_learning_app/constants/tagsMaterialIconsList.dart';
 import 'package:my_learning_app/services/crud/noteService.dart';
 import 'package:my_learning_app/services/crud/tagService.dart';
 import 'package:my_learning_app/utilities/AppColors.dart';
+import 'package:my_learning_app/utilities/DateAndTimeConverter.dart';
 
 class Notetile extends StatelessWidget {
   final DatabaseNote note;
@@ -58,33 +59,14 @@ class Notetile extends StatelessWidget {
     );
   }
 
-  Map<String, String> _getDateAndTime({required String dateAndTime}) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Jun',
-      'July',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final parsedDateAndTime = DateTime.tryParse(dateAndTime);
-    if (parsedDateAndTime == null) {
-      return {'date': 'Not Defined', 'time': 'Not Defined'};
-    }
-    final date = parsedDateAndTime.day.toString();
-    final month = months[parsedDateAndTime.month - 1];
-    final time = '${parsedDateAndTime.hour} ${parsedDateAndTime.minute}';
-    return {'date': "$month $date", 'time': time};
-  }
-
   @override
   Widget build(BuildContext context) {
-    final date = _getDateAndTime(dateAndTime: note.createdAt)['date'];
-    final time = _getDateAndTime(dateAndTime: note.createdAt)['time'];
+    final date = Dateandtimeconverter.getDateAndTime(
+      dateAndTime: note.createdAt,
+    )['date'];
+    final time = Dateandtimeconverter.getDateAndTime(
+      dateAndTime: note.createdAt,
+    )['time'];
     final herotag = "detailNoteScreen-${note.id}";
 
     return GestureDetector(
@@ -280,11 +262,9 @@ class Notetile extends StatelessWidget {
     if (noteTags.length > 3) {
       widgetList.add(
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Container(
-            width: 52,
-            height: 38,
-            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(32),
               border: Border.all(width: 2, color: AppColors.primary),
@@ -295,7 +275,7 @@ class Notetile extends StatelessWidget {
               children: [
                 Icon(
                   Icons.add,
-                  size: 20,
+                  size: 18,
                   fontWeight: FontWeight(800),
                   color: AppColors.primary,
                 ),
@@ -303,7 +283,7 @@ class Notetile extends StatelessWidget {
                   '${noteTags.length - 3}',
                   style: TextStyle(
                     color: AppColors.primary,
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight(800),
                   ),
                 ),
